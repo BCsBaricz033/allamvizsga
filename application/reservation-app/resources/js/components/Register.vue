@@ -6,7 +6,7 @@
             
                 <form  @submit.prevent="saveData">
                 
-                <label>First Name</label>
+                <label>Name</label>
                 <input type="text" v-model="user.name" name="name" id="name" class ="form-control" required/> 
     
           
@@ -15,8 +15,22 @@
     
                 <label>Password</label>
                 <input type="password" v-model="user.password" name="password" id="password" class ="form-control" required/> 
+                
+                <label>Password again</label>
+                <input type="password" v-model="user.secondpassword" name="secondpassword" id="secondpassword" class ="form-control" required/>
     
-    
+                <label>Phone</label>
+                <input type="text" v-model="user.phone" name="phone" id="phone" class ="form-control" required/> 
+
+                <label>Adress</label>
+                <input type="text" v-model="user.adress" name="adress" id="adress" class ="form-control"/> 
+
+                <label>Birthdate</label>
+                <input type="date" v-model="user.birthdate" name="birthdate" id="birthdate" class ="form-control" required/> 
+
+                <label>CNP</label>
+                <input type="text" v-model="user.cnp" name="cnp" id="cnp" class ="form-control"/> 
+
                 <input type="submit" value="Save"> 
     
     
@@ -37,7 +51,13 @@
         user:{
                     name: '',
                     email: '',
-                    password: ''
+                    password: '',
+                    secondpassword:'',
+                    phone:'',
+                    adress:'',
+                    birthdate:'',
+                    cnp:'',
+
         }
         }
     },

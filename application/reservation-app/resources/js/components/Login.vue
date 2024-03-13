@@ -30,8 +30,8 @@
 </template>
    
 <script>
-
-
+import { mapActions } from 'vuex';
+import VueCookies from 'vue-cookies';
 export default {
   name: 'Registation',
   data() {
@@ -45,23 +45,46 @@ export default {
     }
   },
   created() {
+    
   },
   mounted() {
-    console.log("mounted() called.......");
+    console.log("mounted() called.......");  
+    
   },
   methods: {
-    LoginData() {
+    ...mapActions({
+            signIn:'auth/login'
+        }),
+    async LoginData() {
       this.errors=[];
-      console.log(this.user);
-      axios.post("http://127.0.0.1:8000/api/login", this.user)
-        .then(
+      await axios.get('/sanctum/csrf-cookie');
+      //console.log(this.user);
+      await axios.post("http://127.0.0.1:8000/api/login", this.user,)
+          .then(
           ({ data }) => {
+          this.signIn();
+            alert('jo');
             //console.log(data);
             try {
               if (data.status === true) {
-                alert("Login Successfully");
-                this.$router.push({ path: '/admin/' })
-                window.location.href = 'admin';
+                if(data.role==0){
+                  this.$router.push({ path: '/user/' });
+                }
+                else if(data.role==1){
+                  this.$router.push({ path: '/doctor/' })
+                }
+                else if(data.role==2){
+                  this.$router.push({ path: '/assistant/' })
+                }
+
+                else if(data.role==3){
+                  this.$router.push({ path: '/admin/' })
+                }
+                
+                
+
+                //this.$router.push({ path: '/admin/' })
+                //window.location.href = 'admin';
                 //this.$router.go({ name: 'Users' })
               } else {
                 //alert("Login failed")
@@ -76,7 +99,8 @@ export default {
           }
         )
     }
-  }
+  },
+  
 }
 </script>
 <style>

@@ -16,7 +16,12 @@ class AuthController extends Controller
        User::create([
         'name' => $input['name'],
         'email' => $input['email'],
-        'password' => Hash::make($input['password'])
+        'password' => Hash::make($input['password']),
+        'phone'=> $input['phone'],
+        'adress'=> $input['adress'],
+        'birthdate'=> $input['birthdate'],
+        'cnp'=> $input['cnp'],
+        'is_active'=> 1
       ]);
 
           return response()->json(['status' => true,
@@ -34,9 +39,15 @@ class AuthController extends Controller
         ]);
         
         if (Auth::attempt($credentials)) 
-        {
+        {   
+            
+            $user = Auth::user();
+            Auth::login($user);
            return response()->json([ 'status' => true ,
-                                     'message' => "Success"
+                                     'message' => "Success",
+                                     'name' => $user->name,
+                                     'role' => $user->role,
+                                     'token' => $user->createToken('reservation-app')->plainTextToken
         ]);
         }
             return response()->json(['status' => false ,
@@ -44,4 +55,22 @@ class AuthController extends Controller
         
         ]);
     }
+    public function checkLoggedIn() {
+        //return Auth::check();
+        
+        if(Auth::check()){
+            return response()->json(['status' => true,
+                                    'message' => "logged"
+                                ]);
+        }
+        else{
+            return response()->json(['status' => false,
+                                    'message' => "Fail"
+                                ]);
+        }
+        
+    }
+    
+    
+    
 }
