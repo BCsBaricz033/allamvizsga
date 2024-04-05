@@ -37,6 +37,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/users/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
     Route::delete('/users/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
     Route::get('/new_dates', [AdminController::class, 'showNewDatesPage'])->name('new-dates');
+    Route::get('/sections', [AdminController::class, 'getSections'])->name('sections');
+    Route::get('/doctors', [AdminController::class, 'getDoctors'])->name('doctors');
     Route::get('/riports', [AdminController::class, 'showRiportsPage'])->name('riports');
 });
 

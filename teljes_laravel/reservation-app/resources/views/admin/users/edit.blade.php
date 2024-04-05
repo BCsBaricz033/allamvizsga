@@ -30,7 +30,7 @@
             <option value="doctor" {{ $user->role == 'doctor' ? 'selected' : '' }}>Doctor</option>
             <option value="assistant" {{ $user->role == 'assistant' ? 'selected' : '' }}>Assistant</option>
         </select>
-        <button type="submit">Update</button>
+        <x-primary-button type="submit">Update</x-primary-button>
 
     </form>
 
