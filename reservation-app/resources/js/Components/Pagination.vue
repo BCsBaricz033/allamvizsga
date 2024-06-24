@@ -1,0 +1,19 @@
+<template>
+    <nav class="relative flex justify-center">
+        
+        <template v-for="link in pagination" :key="link.label">
+            <Link :href="link.url ?? ''" v-html="link.label" class="flex inótems-center justify-center px-3 py-2 text-sm rounded-lg text-gray-600" :class="{'bg-gray-200':link.active}"></Link>
+        </template>
+    </nav>
+</template>
+
+<script setup>
+
+import { Link } from '@inertiajs/vue3';
+
+
+const props = defineProps({
+    
+    pagination: Object,
+});
+</script>
