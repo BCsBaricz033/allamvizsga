@@ -32,6 +32,7 @@ Route::get('reserve_without_login/doctors', [RiportsController::class, 'getDocto
 Route::get('/get_reserve_filtered_dates', [RiportsController::class, 'getFilteredDatesForReservation'])->name('get_reserve_filtered_dates');
 Route::get('/reserve_without_login_form', [UserController::class, 'showReservationFormWithoutLogin'])->name('reserve_without_login.form');
 Route::post('/reserve_without_login/reserve', [NewDatesController::class, 'reservationWithoutLogin'])->name('reserve_without_login.reserve');
+Route::post('/reserve_without_login/sendReservationEmail', [UserController::class, 'sendEmail'])->name('reserve_without_login.sendReservationEmail');
 
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -47,6 +48,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/riports', [AdminController::class, 'showRiportsPage'])->name('riports');
     Route::get('/get_filtered_dates', [RiportsController::class, 'getFilteredDates'])->name('get_filtered_dates');
     Route::get('/patients', [RiportsController::class, 'getPatients'])->name('patients');
+    Route::get('/print', [RiportsController::class, 'print'])->name('print');
 
 });
 
@@ -74,6 +76,8 @@ Route::middleware(['auth','assistant'])->prefix('assistant')->name('assistant.')
     Route::get('/patients', [RiportsController::class, 'getPatients'])->name('patients');
     Route::get('/get_filtered_dates', [RiportsController::class, 'getFilteredDates'])->name('get_filtered_dates');
     Route::delete('/date/destroy', [RiportsController::class, 'destroyDate'])->name('date.destroy');
+    Route::get('/print', [RiportsController::class, 'print'])->name('print');
+
 });
 
 Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
@@ -86,7 +90,7 @@ Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
     Route::post('/reserve', [NewDatesController::class, 'reservation'])->name('reserve');
     Route::get('/reserve', [UserController::class, 'showReservationForm'])->name('reservation.form');
     Route::post('/date/cancel', [UserController::class, 'cancelDate'])->name('date.cancel');
-
+    Route::post('/sendReservationEmail', [UserController::class, 'sendEmail'])->name('sendReservationEmail');
 });
 
 require __DIR__.'/auth.php';

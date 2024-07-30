@@ -11,6 +11,8 @@ import "vue-multiselect/dist/vue-multiselect.css";
 import Checkbox from '@/Components/Checkbox.vue';
 import DatesModal from '@/Components/DatesModal.vue';
 import NewDatesModal from '@/Components/AssistantNewDatesModal.vue';
+import moment from 'moment';
+import { Link } from '@inertiajs/vue3';
 const props = defineProps({
     institutions: Object,
     sections: Object,
@@ -26,12 +28,12 @@ const selectedInstitutions = ref(props.institutions[0]);
 const selectedSections = ref(props.sections[0]);
 const selectedDoctors = ref(props.doctors[0]);
 const selectedPatients = ref([]);
-const from = ref(null);
-const to = ref(null);
+const from = ref(moment().format('YYYY-MM-DD'));
+const to = ref(moment().format('YYYY-MM-DD'));
 const reserved = ref(false);
 const dates = ref(null);
-let showNewDatesModal = ref(false);
 
+let showNewDatesModal = ref(false);
 watch(selectedInstitutions, () => {
     refreshSections();
     refreshDoctors();
@@ -137,14 +139,13 @@ async function filter() {
     });
 
     dates.value = datesResponse.data;
-    if (dates.value.data < 1) {
+    if (dates.value.length < 1) {
         toast.info("There are no results for your search", {
             autoClose: 3000,
             position: toast.POSITION.BOTTOM_RIGHT,
         });
     }
 }
-
 onMounted(() => {
 
 });
@@ -173,7 +174,7 @@ const deleteDate = async (deletedDate) => {
             autoClose: 3000,
             position: toast.POSITION.BOTTOM_RIGHT,
         });
-        dates.value.data = dates.value.data.filter(date => date.id !== deletedDate.id);
+        dates.value = dates.value.filter(date => date.id !== deletedDate.id);
         closeDateModal();
     } catch (error) {
         toast.error("Error deleting date !", {
@@ -194,6 +195,11 @@ let closeNewDatesModal = () => {
 let insertDates = () => {
     closeNewDatesModal();
 };
+function generatePdfUrl() {
+    const baseUrl = '/assistant/print';
+    const params = new URLSearchParams({ dates: JSON.stringify(dates.value) }).toString();
+    return `${baseUrl}?${params}`;
+}
 </script>
 
 <template>
@@ -243,12 +249,12 @@ let insertDates = () => {
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700">From</label>
-                                <input v-model="from" type="datetime-local"
+                                <input v-model="from" type="date"
                                     class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700">To</label>
-                                <input v-model="to" type="datetime-local"
+                                <input v-model="to" type="date"
                                     class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
                             <div class="block mt-4">
@@ -271,11 +277,14 @@ let insertDates = () => {
                 </div>
             </div>
         </div>
-
-        <div class="py-12" v-if="dates && dates.data && dates.data.length > 0">
+        <div class="py-12" v-if="dates && dates.length > 0">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="hidden md:block">
+                    <a :href="generatePdfUrl()" target="_blank"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Download PDF
+                    </a>
+                    <div class="hidden md:block ">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -297,7 +306,7 @@ let insertDates = () => {
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="date in dates.data">
+                                <tr v-for="date in dates">
                                     <td class="px-6 py-4 whitespace-nowrap">{{ date.doctor_name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ date.patient_name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ date.start_time }}</td>
@@ -319,7 +328,7 @@ let insertDates = () => {
 
 
                     <div class="md:hidden">
-                        <div v-for="date in dates.data" class="bg-white p-4 rounded-lg shadow mb-4">
+                        <div v-for="date in dates" class="bg-white p-4 rounded-lg shadow mb-4">
                             <div class="flex justify-between items-center">
                                 <h3 class="text-lg font-semibold"></h3>
                                 <div class="flex items-center space-x-2">
@@ -337,7 +346,10 @@ let insertDates = () => {
                             <p class="text-sm"><strong>End</strong> {{ date.end_time }}</p>
                         </div>
                     </div>
-                    <Pagination v-if="dates && dates.links" :pagination="dates.links"></Pagination>
+                    <!--
+                                        <Pagination v-if="dates && dates.links" :pagination="dates.links"></Pagination>
+
+                    -->
 
 
                 </div>

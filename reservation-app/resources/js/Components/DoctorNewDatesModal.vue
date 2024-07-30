@@ -77,8 +77,8 @@ export default {
             selectedInstitutions: [],
             selectedSections: [],
             selectedDoctors: [],
-            startTime: this.formatDateTimeLocal(new Date()),
-            endTime: this.formatDateTimeLocal(new Date()),
+            startTime: this.formatDateTimeLocal(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1, 8, 0)),
+            endTime: this.formatDateTimeLocal(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1, 14, 0)),
             minDate: this.formatDateTimeLocal(this.getMinDate()),
             maxDate: this.formatDateTimeLocal(this.getMaxDate()),
             step: 15,
@@ -188,8 +188,7 @@ export default {
             return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
         },
         getMinDate() {
-            const today = new Date();
-            return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            return new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 1, 0, 0);
         },
         getMaxDate() {
             const today = new Date();

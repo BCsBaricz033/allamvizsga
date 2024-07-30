@@ -97,7 +97,7 @@ async function filter() {
     });
 
     dates.value = datesResponse.data;
-    if (dates.value.data < 1) {
+    if (dates.value < 1) {
         toast.info("There are no results for your search", {
             autoClose: 3000,
             position: toast.POSITION.BOTTOM_RIGHT,
@@ -128,7 +128,7 @@ const closeDateModal = () => {
     document.body.classList.remove("modal-open");
 };
 const reserveDate = async (reservedDate) => {
-    dates.value.data = dates.value.data.filter(date => date.id !== reservedDate.id);
+    dates.value = dates.value.filter(date => date.id !== reservedDate.id);
     closeDateModal();
 };
 </script>
@@ -171,12 +171,12 @@ const reserveDate = async (reservedDate) => {
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700">From</label>
-                                <input v-model="from" type="datetime-local"
+                                <input v-model="from" type="date"
                                     class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700">To</label>
-                                <input v-model="to" type="datetime-local"
+                                <input v-model="to" type="date"
                                     class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
                             <div class="flex justify-end">
@@ -188,7 +188,7 @@ const reserveDate = async (reservedDate) => {
                 </div>
             </div>
         </div>
-        <div class="py-12" v-if="dates && dates.data && dates.data.length > 0">
+        <div class="py-12" v-if="dates  && dates.length > 0">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="hidden md:block">
@@ -213,7 +213,7 @@ const reserveDate = async (reservedDate) => {
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="date in dates.data">
+                                <tr v-for="date in dates">
                                     <td class="px-6 py-4 whitespace-nowrap">{{ date.doctor_name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ date.patient_name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ date.start_time }}</td>
@@ -223,7 +223,7 @@ const reserveDate = async (reservedDate) => {
                                             <font-awesome-icon
                                             :icon="['fas', 'clipboard-check']"
                                                 class="text-green-500 hover:text-green-700 cursor-pointer"
-                                                @click="openDateModal('delete', date)" />
+                                                @click="openDateModal('reserve', date)" />
                                         </div>
                                     </td>
                                 </tr>
@@ -231,7 +231,7 @@ const reserveDate = async (reservedDate) => {
                         </table>
                     </div>
                     <div class="md:hidden">
-                        <div v-for="date in dates.data" class="bg-white p-4 rounded-lg shadow mb-4">
+                        <div v-for="date in dates" class="bg-white p-4 rounded-lg shadow mb-4">
                             <div class="flex justify-between items-center">
                                 <h3 class="text-lg font-semibold"></h3>
                                 <div class="flex items-center space-x-2">

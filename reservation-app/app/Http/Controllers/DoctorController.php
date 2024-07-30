@@ -42,6 +42,7 @@ class DoctorController extends Controller
                 ->whereIn('id', $sectionIds)
                 ->get();
             $doctors = [auth()->user()];
+            $doctorIds = [auth()->user()->id];
         } else {
             $sections = DB::table('sections')
                 ->join('sections_in_institutions', 'sections_in_institutions.section_id', '=', 'sections.id')
@@ -51,6 +52,18 @@ class DoctorController extends Controller
             $doctors = User::join('sections_in_institutions', 'sections_in_institutions.id', '=', 'users.section_in_institution_id')
                 ->whereIn('sections_in_institutions.id', $sectionInstitutionIds)
                 ->where('role', 'doctor')
+                ->select([
+                    'users.id',
+                    'users.name'
+                ])
+                ->orderBy('name')
+                ->get();
+            $doctorIds = User::join('sections_in_institutions', 'sections_in_institutions.id', '=', 'users.section_in_institution_id')
+                ->whereIn('sections_in_institutions.id', $sectionInstitutionIds)
+                ->where('role', 'doctor')
+                ->select([
+                    'users.id'
+                ])
                 ->orderBy('name')
                 ->get();
         }
@@ -61,14 +74,16 @@ class DoctorController extends Controller
 
 
         $patients = User::join('dates', 'users.id', '=', 'dates.patient_id')
-            ->select('users.*')
             ->whereIn('dates.section_in_institution_id', $sectionInstitutionIds)
-            ->distinct()
+            ->whereIn('dates.doctor_id', $doctorIds)
+            ->select([
+                'users.id',
+                'users.name'
+            ])
             ->orderBy('name')
             ->get();
         $today = Carbon::today();
-        $dates = Date::
-            join('users as doctors', 'dates.doctor_id', '=', 'doctors.id')
+        $dates = Date::join('users as doctors', 'dates.doctor_id', '=', 'doctors.id')
             ->leftJoin('users as patients', 'dates.patient_id', '=', 'patients.id')
             ->join('sections_in_institutions', 'dates.section_in_institution_id', '=', 'sections_in_institutions.id')
             ->join('institutions', 'sections_in_institutions.institution_id', '=', 'institutions.id')
@@ -92,13 +107,17 @@ class DoctorController extends Controller
             ->where('dates.doctor_id', auth()->user()->id)
             ->whereDate('dates.start_time', '=', $today)
             ->paginate(10);
-
+        $userSection = DB::table('sections')
+            ->whereIn('id', $sectionIds)
+            ->get();
         return Inertia::render('Doctor/Dashboard', [
             'institutions' => $institutions,
             'sections' => $sections,
             'patients' => $patients,
             'doctors' => $doctors,
-            'dates' => $dates
+            'dates' => $dates,
+            'user' => auth()->user(),
+            'userSection'=>$userSection
         ]);
     }
 

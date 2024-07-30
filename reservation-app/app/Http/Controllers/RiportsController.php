@@ -12,6 +12,9 @@ use DateInterval;
 use Illuminate\Support\Facades\Arr;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\PDF;
+
 
 class RiportsController extends Controller
 {
@@ -30,7 +33,7 @@ class RiportsController extends Controller
     {
         $institutionIds = $request->institutionIds ? $request->institutionIds : null;
         $sectionIds = $request->sectionIds ? $request->sectionIds : null;
-        // Fetch section_in_institution_ids for the given institution and section IDs
+        
         if ($institutionIds && $sectionIds) {
             $sectionInstitutionIds = DB::table('sections_in_institutions')
                 ->whereIn('section_id', $sectionIds)
@@ -51,9 +54,13 @@ class RiportsController extends Controller
 
 
 
-        // Fetch doctors associated with the fetched section_in_institution_ids
+        
         $doctors = User::where('role', 'doctor')
             ->whereIn('section_in_institution_id', $sectionInstitutionIds)
+            ->select([
+                'users.id',
+                'users.name'
+            ])
             ->get();
 
         return response()->json($doctors);
@@ -89,7 +96,10 @@ class RiportsController extends Controller
             $patients = $patients->whereIn('dates.doctor_id', $doctorIds);
         }
 
-        $patients = $patients->orderBy('name')->get();
+        $patients = $patients->select([
+            'users.id',
+            'users.name'
+        ])->orderBy('name')->distinct()->get();
         return response()->json($patients);
     }
 
@@ -136,10 +146,10 @@ class RiportsController extends Controller
         }
 
         if ($from) {
-            $filteredDates->where('end_time', '>=', $from);
+            $filteredDates->whereDate('end_time', '>=', $from);
         }
         if ($to) {
-            $filteredDates->where('end_time', '<=', $to);
+            $filteredDates->whereDate('end_time', '<=', $to);
         }
 
         if ($reserved == 1) {
@@ -169,9 +179,10 @@ class RiportsController extends Controller
                 'institutions.name as institution_name',
                 'sections.name as section_name',
 
-            ]);
+            ])
+            ->orderBy('dates.start_time','desc');
 
-        $filteredDates = $filteredDates->paginate(10);
+        $filteredDates = $filteredDates->get();
 
         return response()->json($filteredDates);
     }
@@ -216,10 +227,10 @@ class RiportsController extends Controller
         }
 
         if ($from) {
-            $filteredDates->where('end_time', '>=', $from);
+            $filteredDates->whereDate('end_time', '>=', $from);
         }
         if ($to) {
-            $filteredDates->where('end_time', '<=', $to);
+            $filteredDates->whereDate('end_time', '<=', $to);
         }
 
         
@@ -251,7 +262,7 @@ class RiportsController extends Controller
 
             ]);
 
-        $filteredDates = $filteredDates->paginate(10);
+        $filteredDates = $filteredDates->get();
 
         return response()->json($filteredDates);
     }
@@ -259,5 +270,23 @@ class RiportsController extends Controller
     {
         $date = Date::findOrFail($request->id);
         $date->delete();
+    }
+
+    public function print(Request $request)
+    {
+         //Log::info('Print',$request->input('dates'));
+
+        
+        $dates = $request->input('dates');
+        $dates = json_decode($dates, true);
+        
+        $pdf = PDF::loadView('reports.date_report', ['dates' => $dates]);
+        
+        
+        return $pdf->download('date_report.pdf');
+        
+        
+        
+        
     }
 }

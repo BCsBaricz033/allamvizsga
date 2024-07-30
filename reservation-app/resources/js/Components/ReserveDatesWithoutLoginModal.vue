@@ -3,7 +3,7 @@
         @click.self="close">
         <div class="bg-white p-6 rounded-lg shadow-lg w-96 h-screen overflow-auto">
             <h2 class="text-xl font-bold mb-4">{{ title }}</h2>
-            <form @submit.prevent="save">
+            <form @submit.prevent="reserveDate">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Institution</label>
                     <input v-model="date.institution_name" type="text" disabled
@@ -63,16 +63,17 @@
                     <button @click="close" type="button"
                         class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Cancel</button>
                 </div>
-            </form>
-            <div v-if="mode === 'delete'">
-                <p>Are you sure you want to reserve this appointment?</p>
-                <div class="flex justify-end">
-                    <button @click="reserveDate"
-                        class="mr-2 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Reserve</button>
-                    <button @click="close"
-                        class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Cancel</button>
+                <div v-if="mode === 'reserve'">
+                    <p>Are you sure you want to reserve this appointment?</p>
+                    <div class="flex justify-end">
+                        <button type="submit"
+                            class="mr-2 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Reserve</button>
+                        <button @click="close" type="button"
+                            class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Cancel</button>
+                    </div>
                 </div>
-            </div>
+            </form>
+
         </div>
     </div>
 </template>
@@ -84,16 +85,16 @@ export default {
     components: {
         Multiselect
     },
-    props: ['show', 'title', 'date', 'mode', 'user'],
+    props: ['show', 'title', 'date', 'mode'],
     data() {
         return {
             reason: '',
-            user:{
-                name:'',
-                identity_number:'',
-                birthdate:'',
-                phone:'',
-                email:''
+            user: {
+                name: '',
+                identity_number: '',
+                birthdate: '',
+                phone: '',
+                email: ''
             }
         };
     },
@@ -103,15 +104,24 @@ export default {
         },
         async reserveDate() {
             try {
-                let insertingresponse = await axios.post('reserve_without_login/reserve', { id: this.date.id, reason: this.reason,
-                    name:this.user.name,email:this.user.email,phone:this.user.phone
-                 });
+                let insertingresponse = await axios.post('reserve_without_login/reserve', {
+                    id: this.date.id, reason: this.reason,
+                    name: this.user.name, email: this.user.email, phone: this.user.phone
+                });
                 if (insertingresponse.data.success) {
                     toast.success("Date reserved successfully!", {
                         autoClose: 3000,
                         position: toast.POSITION.BOTTOM_RIGHT,
                     });
-                    this.$emit('reserve',this.date);
+                    this.$emit('reserve', this.date);
+                    await axios.post('reserve_without_login/sendReservationEmail', {
+                        name: this.user.name,
+                        email: this.user.email,
+                        institution: this.date.institution_name,
+                        section: this.date.section_name,
+                        start_time: this.date.start_time,
+                        end_time: this.date.end_time
+                    });
                 }
             } catch (error) {
                 if (error.response && error.response.data && error.response.data.error) {

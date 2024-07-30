@@ -45,23 +45,20 @@ class NewDatesController extends Controller
                                 $currentTime = clone $startTime;
                                 $currentTime = clone $startTime;
 
-                                // Végigmegyünk a napokon
+                                
                                 while ($currentTime->format('Y-m-d') <= $endTime->format('Y-m-d')) {
-                                    // Az adott nap kezdete és vége
+                                    
                                     $currentStartTime = (clone $currentTime)->setTime((int)$startTime->format('H'), (int)$startTime->format('i'), 0);
                                     $currentEndTime = (clone $currentTime)->setTime((int)$endTime->format('H'), (int)$endTime->format('i'), 0);
 
-                                    // Ha az adott napi vége később van mint a nap vége, akkor a nap vége lesz a napi vég
                                     if ($currentEndTime > $endTime) {
                                         $currentEndTime = (clone $endTime)->setTime((int)$endTime->format('H'), (int)$endTime->format('i'), 0);
                                     }
 
-                                    // Ha az adott napi kezdete korábban van mint az intervallum kezdete, akkor az intervallum kezdete lesz a napi kezdő
                                     if ($currentStartTime < $startTime) {
                                         $currentStartTime = (clone $startTime)->setTime((int)$startTime->format('H'), (int)$startTime->format('i'), 0);
                                     }
 
-                                    // Iterálás az órák között az adott napon belül
                                     $currentPeriodTime = clone $currentStartTime;
                                     while ($currentPeriodTime < $currentEndTime) {
                                         $newEndTime = (clone $currentPeriodTime)->add(new DateInterval('PT' . $step . 'M'));
@@ -97,7 +94,7 @@ class NewDatesController extends Controller
                                         $currentPeriodTime->add(new DateInterval('PT' . $step . 'M'));
                                     }
 
-                                    // Következő napra lépés
+                                    
                                     $currentTime->add(new DateInterval('P1D'));
                                 }
                             }
@@ -114,7 +111,7 @@ class NewDatesController extends Controller
                 return response()->json(['info' => 'The parameters are wrong ']);
             }
         } catch (\Exception $e) {
-            DB::rollback(); // Hiba esetén rollback
+            DB::rollback(); 
             return response()->json(['error' => 'Error while inserting dates.'], 500);
         }
     }
@@ -123,10 +120,9 @@ class NewDatesController extends Controller
 
         $appointmentId = $request->id;
         $reason = $request->reason ? $request->reason : null;
-        // Az adott időpont keresése az appointment_id alapján
+        // find appointbent by  appointment_id 
         $appointment = Date::find($appointmentId);
-        // Ellenőrzés, hogy a felhasználó már foglalt-e időpontot az adott napon
-        // Ellenőrzés, hogy a felhasználó már foglalt-e időpontot az adott napon
+        
 
 
 
@@ -141,24 +137,24 @@ class NewDatesController extends Controller
             return response()->json(['error' => 'You have already booked an appointment for this day'], 422);
         }
 
-        // Ellenőrizzük, hogy az időpont létezik-e és még nem foglalt-e
+        // check the appointment
         if ($appointment && !$appointment->reserved) {
-            // Foglalás beállítása
+            // set the appointment
             $appointment->reserved = true;
             $appointment->patient_id = Auth::user()->id;
             $appointment->reason = $reason;
             $appointment->cnp = Auth::user()->identity_number;
             $appointment->birthdate = Auth::user()->birthdate;
             $appointment->phone = Auth::user()->phone;
-            // Foglalás mentése az adatbázisba
+            // save the appointment
             $appointment->save();
 
-            // Sikeres válasz küldése
+            // send response
             return response()->json(['success' => true]);
         } else {
             return response()->json(['error' => 'The time is no longer available, please choose another time']);
         }
-        // Ha az időpont már foglalt, vagy nem található, akkor hibaüzenetet küldünk
+        
     }
 
     public function reservationWithoutLogin(Request $request)
@@ -175,15 +171,9 @@ class NewDatesController extends Controller
 
             ]);
         }
-        // Az adott időpont keresése az appointment_id alapján
+        
         $appointment = Date::find($appointmentId);
-        // Ellenőrzés, hogy a felhasználó már foglalt-e időpontot az adott napon
-        // Ellenőrzés, hogy a felhasználó már foglalt-e időpontot az adott napon
-
-
-
-
-        // A kívánt dátum
+        
         $alreadyReservedToday = Date::whereRaw("DATE(start_time) = DATE('" . $appointment->start_time . "')")
             ->where('patient_id', $user->id)
             ->where('reserved', true)
@@ -195,25 +185,20 @@ class NewDatesController extends Controller
         if ($appointment->reserved) {
             return response()->json(['error' => 'The time is no longer available, please choose another time']);
         }
-        // Ellenőrizzük, hogy az időpont létezik-e és még nem foglalt-e
         if ($appointment && !$appointment->reserved) {
-            // Foglalás beállítása
             $appointment->reserved = true;
             $appointment->patient_id = $user->id;
             $appointment->reason = $reason;
             $appointment->cnp = $user->identity_number ? $user->identity_number : null;
             $appointment->birthdate = $user->birthdate;
             $appointment->phone = $user->phone;
-            // Foglalás mentése az adatbázisba
             $appointment->save();
 
-            // Sikeres válasz küldése
             return response()->json(['success' => true]);
         } else {
             return response()->json(['error' => 'An error occurred, please try again']);
         }
 
-        // Ha az időpont már foglalt, vagy nem található, akkor hibaüzenetet küldünk
 
     }
 }

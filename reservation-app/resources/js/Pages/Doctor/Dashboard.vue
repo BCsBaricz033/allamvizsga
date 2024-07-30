@@ -11,27 +11,31 @@ import "vue-multiselect/dist/vue-multiselect.css";
 import Checkbox from '@/Components/Checkbox.vue';
 import DatesModal from '@/Components/DatesModal.vue';
 import NewDatesModal from '@/Components/DoctorNewDatesModal.vue';
+import moment from 'moment';
 const props = defineProps({
     institutions: Object,
     sections: Object,
     patients: Object,
     doctors: Object,
-    dates:Object
+    dates: Object,
+    user:Object,
+    userSection:Object
 });
 
 const institutions = ref(props.institutions);
 const sections = ref(props.sections);
 const doctors = ref(props.doctors);
 const patients = ref(props.patients);
-const selectedInstitutions = ref(props.institutions[0]);
-const selectedSections = ref(props.sections[0]);
-const selectedDoctors = ref(props.doctors[0]);
+const selectedInstitutions = ref(props.institutions);
+const selectedSections = ref(props.userSection);
+const selectedDoctors = ref(props.user);
 const selectedPatients = ref([]);
-const from = ref(null);
-const to = ref(null);
+const from = ref(moment().format('YYYY-MM-DD'));
+const to = ref(moment().format('YYYY-MM-DD'));
 const reserved = ref(false);
 const dates = ref(props.dates);
 let showNewDatesModal = ref(false);
+let showFilterForm = ref(true)
 
 watch(selectedInstitutions, () => {
     refreshSections();
@@ -136,9 +140,8 @@ async function filter() {
 
         }
     });
-
     dates.value = datesResponse.data;
-    if (dates.value.data < 1) {
+    if (dates.value < 1) {
         toast.info("There are no results for your search", {
             autoClose: 3000,
             position: toast.POSITION.BOTTOM_RIGHT,
@@ -146,8 +149,17 @@ async function filter() {
     }
 }
 
-onMounted(() => {
+function haveAppointmentToday() {
+    if (!(dates && dates.data && dates.data.length > 0)) {
+        toast.info("There are no appointments for today", {
+            autoClose: 3000,
+            position: toast.POSITION.BOTTOM_RIGHT,
+        });
+    }
+}
 
+onMounted(() => {
+    //haveAppointmentToday();
 });
 
 
@@ -174,7 +186,7 @@ const deleteDate = async (deletedDate) => {
             autoClose: 3000,
             position: toast.POSITION.BOTTOM_RIGHT,
         });
-        dates.value.data = dates.value.data.filter(date => date.id !== deletedDate.id);
+        dates.value = dates.value.filter(date => date.id !== deletedDate.id);
         closeDateModal();
     } catch (error) {
         toast.error("Error deleting date !", {
@@ -212,57 +224,69 @@ let insertDates = () => {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white  shadow-sm sm:rounded-lg">
                     <div class=" p-6 rounded-lg  w-96">
-                        <form @submit.prevent="filter">
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700">Institution(s)</label>
-                                <multiselect v-model="selectedInstitutions" :options="institutions" :multiple="true"
-                                    :close-on-select="false" :clear-on-select="false" :preserve-search="true" :limit="1"
-                                    label="name" track-by="name" :allow-empty="false">
-                                </multiselect>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700">Section(s)</label>
-                                <multiselect v-model="selectedSections" :options="sections" :multiple="true"
-                                    :close-on-select="false" :clear-on-select="false" :preserve-search="true" :limit="1"
-                                    label="name" track-by="name" :allow-empty="false">
-                                </multiselect>
 
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700">Doctor(s)</label>
-                                <multiselect v-model="selectedDoctors" :options="doctors" :multiple="true"
-                                    :close-on-select="false" :clear-on-select="false" :preserve-search="true" :limit="1"
-                                    label="name" track-by="name" :allow-empty="false">
-                                </multiselect>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700">Patient(s)</label>
-                                <multiselect v-model="selectedPatients" :options="patients" :multiple="true"
-                                    :close-on-select="false" :clear-on-select="false" :preserve-search="true" :limit="1"
-                                    label="name" track-by="name" :allow-empty="true">
-                                </multiselect>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700">From</label>
-                                <input v-model="from" type="datetime-local"
-                                    class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700">To</label>
-                                <input v-model="to" type="datetime-local"
-                                    class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                            </div>
-                            <div class="block mt-4">
-                                <label class="flex items-center">
-                                    <Checkbox name="remember" v-model:checked="reserved" />
-                                    <span class="ms-2 text-sm text-gray-600">Show only reserved</span>
-                                </label>
-                            </div>
-                            <div class="flex justify-end">
-                                <button type="submit"
-                                    class="mr-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Filter</button>
-                            </div>
-                        </form>
+                        <button type="button" v-if="showFilterForm == false" @click="showFilterForm = true"
+                            class="mr-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Filter&nbsp&nbsp
+                            <font-awesome-icon :icon="['fas', 'arrow-down']" />
+                        </button>
+                        <Transition>
+                            <form @submit.prevent="filter" v-if="showFilterForm == true">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Institution(s)</label>
+                                    <multiselect v-model="selectedInstitutions" :options="institutions" :multiple="true"
+                                        :close-on-select="false" :clear-on-select="false" :preserve-search="true"
+                                        :limit="1" label="name" track-by="name" :allow-empty="false">
+                                    </multiselect>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Section(s)</label>
+                                    <multiselect v-model="selectedSections" :options="sections" :multiple="true"
+                                        :close-on-select="false" :clear-on-select="false" :preserve-search="true"
+                                        :limit="1" label="name" track-by="name" :allow-empty="false">
+                                    </multiselect>
+
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Doctor(s)</label>
+                                    <multiselect v-model="selectedDoctors" :options="doctors" :multiple="true"
+                                        :close-on-select="false" :clear-on-select="false" :preserve-search="true"
+                                        :limit="1" label="name" track-by="name" :allow-empty="false">
+                                    </multiselect>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Patient(s)</label>
+                                    <multiselect v-model="selectedPatients" :options="patients" :multiple="true"
+                                        :close-on-select="false" :clear-on-select="false" :preserve-search="true"
+                                        :limit="1" label="name" track-by="name" :allow-empty="true">
+                                    </multiselect>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">From</label>
+                                    <input v-model="from" type="date"
+                                        class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">To</label>
+                                    <input v-model="to" type="date"
+                                        class="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div class="block mt-4">
+                                    <label class="flex items-center">
+                                        <Checkbox name="remember" v-model:checked="reserved" />
+                                        <span class="ms-2 text-sm text-gray-600">Show only reserved</span>
+                                    </label>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button type="submit"
+                                        class="mr-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Filter</button>
+                                    <button type="button"
+                                        class="mr-2 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                                        @click="showFilterForm = false">Close&nbsp&nbsp
+                                        <font-awesome-icon :icon="['fas', 'arrow-up']" />
+                                    </button>
+                                </div>
+                            </form>
+                        </Transition>
                     </div>
 
 
@@ -273,7 +297,7 @@ let insertDates = () => {
             </div>
         </div>
 
-        <div class="py-12" v-if="dates && dates.data && dates.data.length > 0">
+        <div class="py-12" v-if="dates && dates.length > 0">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="hidden md:block">
@@ -320,7 +344,7 @@ let insertDates = () => {
 
 
                     <div class="md:hidden">
-                        <div v-for="date in dates.data" class="bg-white p-4 rounded-lg shadow mb-4">
+                        <div v-for="date in dates" class="bg-white p-4 rounded-lg shadow mb-4">
                             <div class="flex justify-between items-center">
                                 <h3 class="text-lg font-semibold"></h3>
                                 <div class="flex items-center space-x-2">
@@ -338,7 +362,10 @@ let insertDates = () => {
                             <p class="text-sm"><strong>End</strong> {{ date.end_time }}</p>
                         </div>
                     </div>
-                    <Pagination v-if="dates && dates.links" :pagination="dates.links"></Pagination>
+                    <!--
+                                        <Pagination v-if="dates && dates.links" :pagination="dates.links"></Pagination>
+
+                    -->
 
 
                 </div>

@@ -14,6 +14,8 @@ use DateTime;
 use DateInterval;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Mail\ReservationConfirmationMail;
+use Illuminate\Support\Facades\Mail;
 
 
 class UserController extends Controller
@@ -86,5 +88,22 @@ class UserController extends Controller
         ]);
     
         return response()->json(['success' => 'Date cancelled successfully.']);
+    }
+    public function sendEmail(Request $request)
+    {
+        
+        
+        $name = $request->input('name');
+        $date = [
+            'institution' => $request->input('institution'),
+            'section' => $request->input('section'),
+            'start_time' => $request->input('start_time'),
+            'end_time' => $request->input('end_time'),
+        ];
+        Mail::to($request->input('email'))->send(new ReservationConfirmationMail($name, $date));
+
+        return response()->json(['message' => 'Reservation confirmed and email sent.']);
+        
+        
     }
 }

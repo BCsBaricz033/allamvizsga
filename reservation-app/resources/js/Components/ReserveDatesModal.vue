@@ -90,14 +90,27 @@ export default {
             this.$emit('close');
         },
         async reserveDate() {
+
+
             try {
                 let insertingresponse = await axios.post('reserve', { id: this.date.id, reason: this.reason });
                 if (insertingresponse.data.success) {
+                    
                     toast.success("Date reserved successfully!", {
                         autoClose: 3000,
                         position: toast.POSITION.BOTTOM_RIGHT,
                     });
-                    this.$emit('reserve',this.date);
+                    this.$emit('reserve', this.date);
+                    await axios.post('sendReservationEmail', {
+                        name: this.user.name,
+                        email: this.user.email,
+                        institution: this.date.institution_name,
+                        section: this.date.section_name,
+                        start_time: this.date.start_time,
+                        end_time: this.date.end_time
+
+                    });
+                    
                 }
             } catch (error) {
                 if (error.response && error.response.data && error.response.data.error) {
@@ -112,6 +125,7 @@ export default {
                     });
                 }
             }
+
 
 
 

@@ -31,23 +31,47 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255',],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'phone' => ['required', 'string', 'max:20'],
+            'address' => ['required', 'string','max:255'],
+            'birthdate' => ['required'],
+            'identity' => ['max:255'],
         ]);
+        $existingUser = User::where('email', $request->email)->first();
 
-        $user = User::create([
+
+        if ($existingUser && $existingUser->password) {
+            return redirect()->back()->withErrors(['email' => 'Ez az e-mail cím már regisztrálva van.'])->withInput($request->except('password'));
+
+        }
+        elseif ($existingUser && !$existingUser->password) {
+            $existingUser->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'phone' => $request->phone,
+                'address' => $request->address? $request->address : null,
+                'birthdate' => $request->birthdate,
+                'identity_number' => $request->identity ? $request->identity : null,
+            ]);
+            $user=$existingUser;
+        }
+        else{
+            $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'birthdate' => $request->birthdate,
+            'identity_number' => $request->identity,
         ]);
-
         event(new Registered($user));
-
+        }
         Auth::login($user);
 
-        return redirect()->intended(route('user.dashboard', absolute: false));
-        
-      
+        return redirect(route('login', absolute: false));
     }
 }

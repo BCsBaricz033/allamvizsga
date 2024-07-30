@@ -11,6 +11,10 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    phone:'',
+    address:'',
+    birthdate:null,
+    identity:''
 });
 
 const submit = () => {
@@ -25,9 +29,11 @@ const submit = () => {
         <Head title="Register" />
 
         <form @submit.prevent="submit">
+            <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-700 md:text-2xl dark:text-white text-center">
+                Register
+            </h1>
             <div>
                 <InputLabel for="name" value="Name" />
-
                 <TextInput
                     id="name"
                     type="text"
@@ -84,6 +90,61 @@ const submit = () => {
                 />
 
                 <InputError class="mt-2" :message="form.errors.password_confirmation" />
+            </div>
+            <div>
+                <InputLabel for="phone" value="Phone" />
+                <TextInput
+                    id="phone"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.phone"
+                    required
+                    autofocus
+                    autocomplete="phone"
+                />
+
+                <InputError class="mt-2" :message="form.errors.phone" />
+            </div>
+            <div>
+                <InputLabel for="address" value="Address" />
+                <TextInput
+                    id="address"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.address"
+                    required
+                    autofocus
+                    autocomplete="address"
+                />
+
+                <InputError class="mt-2" :message="form.errors.address" />
+            </div>
+            <div>
+                <InputLabel for="birthdate" value="Birthdate" />
+                <TextInput
+                    id="birthdate"
+                    type="date"
+                    class="mt-1 block w-full"
+                    v-model="form.birthdate"
+                    required
+                    autofocus
+                    autocomplete="birthdate"
+                />
+
+                <InputError class="mt-2" :message="form.errors.name" />
+            </div>
+            <div>
+                <InputLabel for="identity" value="Identity number" />
+                <TextInput
+                    id="identity"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.identity"
+                    autofocus
+                    autocomplete="identity number"
+                />
+
+                <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
             <div class="flex items-center justify-end mt-4">

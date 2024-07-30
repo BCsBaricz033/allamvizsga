@@ -16,11 +16,6 @@ class AssistantController extends Controller
     public function showRiportsPage()
     {
         $userSectionId = auth()->user()->section_in_institution_id;
-
-
-
-
-
         $institutionIds = DB::table('sections_in_institutions')
             ->where('id', $userSectionId)
             ->pluck('institution_id')
@@ -60,11 +55,30 @@ class AssistantController extends Controller
         $doctors = User::join('sections_in_institutions', 'sections_in_institutions.id', '=', 'users.section_in_institution_id')
             ->whereIn('sections_in_institutions.id', $sectionInstitutionIds)
             ->where('role', 'doctor')
+            ->select([
+                'users.id',
+                'users.name'
+            ])
+            ->orderBy('name')
+            ->distinct()
+            ->get();
+
+        $doctorIds = User::join('sections_in_institutions', 'sections_in_institutions.id', '=', 'users.section_in_institution_id')
+            ->whereIn('sections_in_institutions.id', $sectionInstitutionIds)
+            ->where('role', 'doctor')
+            ->select([
+                'users.id',
+            ])
             ->orderBy('name')
             ->get();
+
         $patients = User::join('dates', 'users.id', '=', 'dates.patient_id')
-            ->select('users.*')
             ->whereIn('dates.section_in_institution_id', $sectionInstitutionIds)
+            ->whereIn('dates.doctor_id', $doctorIds)
+            ->select([
+                'users.id',
+                'users.name'
+            ])
             ->distinct()
             ->orderBy('name')
             ->get();
@@ -127,10 +141,10 @@ class AssistantController extends Controller
             ->where('role', 'doctor')
             ->orderBy('name')
             ->get();
-        
 
 
-        
+
+
 
         return response()->json([
             'institutions' => $institutions,
